@@ -1,5 +1,6 @@
 package org.adaschool.tdd;
 
+import org.adaschool.tdd.controller.weather.dto.NearByWeatherReportsQueryDto;
 import org.adaschool.tdd.controller.weather.dto.WeatherReportDto;
 import org.adaschool.tdd.exception.WeatherReportNotFoundException;
 import org.adaschool.tdd.repository.WeatherReportRepository;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -42,7 +45,7 @@ class MongoWeatherServiceTest
         double lat = 4.7110;
         double lng = 74.0721;
         GeoLocation location = new GeoLocation( lat, lng );
-        WeatherReportDto weatherReportDto = new WeatherReportDto( location, 35f, 22f, "tester", new Date() );
+        WeatherReportDto weatherReportDto = new WeatherReportDto( location, 35, 22, "tester", new Date() );
         weatherService.report( weatherReportDto );
         verify( repository ).save( any( WeatherReport.class ) );
     }
@@ -54,7 +57,7 @@ class MongoWeatherServiceTest
         double lat = 4.7110;
         double lng = 74.0721;
         GeoLocation location = new GeoLocation( lat, lng );
-        WeatherReport weatherReport = new WeatherReport( location, 35f, 22f, "tester", new Date() );
+        WeatherReport weatherReport = new WeatherReport( location, 35, 22, "tester", new Date() );
         when( repository.findById( weatherReportId ) ).thenReturn( Optional.of( weatherReport ) );
         WeatherReport foundWeatherReport = weatherService.findById( weatherReportId );
         Assertions.assertEquals( weatherReport, foundWeatherReport );
@@ -65,9 +68,20 @@ class MongoWeatherServiceTest
     {
         String weatherReportId = "dsawe1fasdasdoooq123";
         when( repository.findById( weatherReportId ) ).thenReturn( Optional.empty() );
-        Assertions.assertThrows( WeatherReportNotFoundException.class, () -> {
+        Assertions.assertThrows( Exception.class, () -> {
             weatherService.findById( weatherReportId );
         } );
+    }
+
+    @Test
+    void findNearLocationTest(){
+        double lat = 4.7110;
+        double lng = 6.0721;
+        GeoLocation location = new GeoLocation( lat, lng );
+        float distanceRangeMeters = 1000000000;
+        NearByWeatherReportsQueryDto query = new NearByWeatherReportsQueryDto(location,distanceRangeMeters);
+        List<WeatherReport> list =  weatherService.findNearLocation(query.getGeoLocation(),query.getDistanceRangeInMeters());
+        Assertions.assertTrue(list.size() >= 1);
     }
 
 }
